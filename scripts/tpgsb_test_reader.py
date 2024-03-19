@@ -5,6 +5,9 @@ import logging
 import pandas as pd
 # import hdf5libs
 import click
+
+import tpgsandbox.utils.unpacker as unpacker
+import tpgsandbox.utils.assembler as assembler
 import tpgsandbox.utils.reader as recordreader
 
 from rich import print
@@ -24,6 +27,10 @@ def main(rawfile, interactive, plot, tr_offset, num_trs):
     rr = recordreader.RecordReader()
     rr.add_file(rawfile)
 
+
+    rr.add_product('bde_eth', unpacker.WIBEthFragmentPandasUnpacker(), assembler.ADCJoiner())
+    rr.add_product('tp', unpacker.TPFragmentPandasUnpacker(), assembler.TPConcatenator())
+
     trs = [ i for i in rr.iter_records()]
     # # process only the first TR
     trs = trs[tr_offset:tr_offset+num_trs]
@@ -35,10 +42,10 @@ def main(rawfile, interactive, plot, tr_offset, num_trs):
 
         # dfs = asm_svc.assemble(unpacked_tr)
 
-        dfs, info = rr.load_record(run,tr)
+        data = rr.load_record(run,tr)
         
-        df_tp = dfs['tp']
-        df_tpc = dfs['bde_eth']
+        df_tp = data.record['tp']
+        df_tpc = data.record['bde_eth']
 
 
         if plot and not df_tpc.empty:

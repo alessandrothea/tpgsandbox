@@ -26,8 +26,11 @@ class RawdataFileInfo:
     tpc_chan_map_id : str
 
 @dataclass
-class RecordDetails:
-    tpc_chan_map : detchannelmaps.TPCChannelMap
+class RecordData:
+
+    frags : dict
+    record : dict
+    tpc_chan_map_id : str
 
     
 class RecordReader():
@@ -36,6 +39,8 @@ class RecordReader():
         self.raw_files = {}
         self.record_list = {}
         self.tpc_chan_map_cache = {}
+        self.unpacker = unpacker.UnpackerService()
+        self.assembler = assembler.AssemblerService()
 
 
     def get_tpc_channel_map(self, ch_map_id) -> detchannelmaps.TPCChannelMap:
@@ -82,6 +87,9 @@ class RecordReader():
         for i in r.tr_list:
             del self.record_list[r.run_number][i]
 
+    def add_product(self, product, unpacker, assembler):
+        self.unpacker.add(product, unpacker)
+        self.assembler.add(product, product, assembler)
 
     def load_record(self, run, tr):
         '''Load a trigger record from a specific run'''
@@ -94,25 +102,20 @@ class RecordReader():
 
         r = self.record_list[run][tr]
 
-        # TODO: make configurable
-        upk = unpacker.UnpackerService()
-        asm = assembler.AssemblerService()
+        # # TODO: make configurable
+        # upk = unpacker.UnpackerService()
+        # asm = assembler.AssemblerService()
 
-        # Unpackers
-        wethf_up = unpacker.WIBEthFragmentPandasUnpacker()
-        daphne_up = unpacker.DAPHNEStreamFragmentPandasUnpacker()
-        tp_up = unpacker.TPFragmentPandasUnpacker()
-        
-        upk.add_unpacker('bde_eth', wethf_up)
-        upk.add_unpacker('tp', tp_up)
-        upk.add_unpacker('pds', daphne_up)
+        # # Unpackers
+        # upk.add_unpacker('bde_eth', unpacker.WIBEthFragmentPandasUnpacker())
+        # upk.add_unpacker('tp', unpacker.TPFragmentPandasUnpacker())
 
-        # Assemblers
-        weth_asb = assembler.ADCJoiner('bde_eth')
-        tp_asb = assembler.TPConcatenator('tp')
+        # # Assemblers
+        # weth_asb = assembler.ADCJoiner('bde_eth')
+        # tp_asb = assembler.TPConcatenator('tp')
         
-        asm.add('bde_eth', weth_asb)
-        asm.add('tp', tp_asb)
+        # asm.add('bde_eth', weth_asb)
+        # asm.add('tp', tp_asb)
 
 
         # Open the rawdata file
@@ -122,14 +125,12 @@ class RecordReader():
 
         # Run unpackers
         print(f"Loading record {tr}")
-        unpacked_tr, ctx = upk.unpack(rdf, tr, tpc_chan_map_id=r.tpc_chan_map_id)
+        df_frags = self.unpacker.unpack(rdf, tr, tpc_chan_map_id=r.tpc_chan_map_id)
 
         # Assemble final products
-        dfs = asm.assemble(unpacked_tr)
+        df_tr = self.assembler.assemble(df_frags)
 
-        return dfs, RecordDetails(
-            tpc_chan_map = ctx.tpc_chan_map
-        )
+        return RecordData(df_frags, df_tr, r.tpc_chan_map_id )
 
     def get_records(self) -> dict:
         '''Get the records known to the reader'''

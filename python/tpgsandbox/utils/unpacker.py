@@ -434,14 +434,14 @@ class UnpackerService:
         return self._tpc_chan_map_cache.setdefault(ch_map_id, detchannelmaps.make_map(ch_map_id))
         
 
-    def add_unpacker(self, prod_name, unpacker):
+    def add(self, prod_name, unpacker):
 
         if prod_name in self.fragment_unpackers:
             raise KeyError(f"Unpacker for product {prod_name} already registered")
 
         self.fragment_unpackers[prod_name] = unpacker
 
-    def get_unpacker(self, prod_name):
+    def get(self, prod_name):
         return self.fragment_unpackers[prod_name]
         
 
@@ -493,4 +493,4 @@ class UnpackerService:
                 logging.debug(f"[{prod}] Unpacked Subsys={sid.subsystem}, id={sid.id} ({len(r) if r is not None else 0})")
                 res.setdefault(prod,{})[sid.id] = r
 
-        return res, ctx
+        return res
