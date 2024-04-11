@@ -17,9 +17,9 @@ openv_2_chmap = {
 
 @dataclass
 class RawdataFileInfo:
-    '''
-    Hold rawdata information
-    '''
+    """
+    Raw data file information
+    """
     path: str
     run_number: int
     tr_list : list[int]
@@ -27,6 +27,9 @@ class RawdataFileInfo:
 
 @dataclass
 class RecordData:
+    """
+    DAQ Record Data 
+    """
 
     frags : dict
     record : dict
@@ -34,17 +37,40 @@ class RecordData:
 
     
 class RecordReader():
+    """
+    Utility reader class to unpack DAQ Records from one or more DAQ HDF files and converting them to pandas.Dataframes.
+    
+    The reader can be created by passing a list of files to read, or by adding them after creation.
+    For each file the list of run and trigger records pair is extracted from the file and cached.
+    The operational environment for each file is stored as well for later use.
 
-    def __init__(self):
+    The fragment unpacking and assembli into Dataframes is configured by adding "products".
+    For each product a  
+    
+    """
+
+    def __init__(self, files: list[str] = None):
         self.raw_files = {}
         self.record_list = {}
         self.tpc_chan_map_cache = {}
         self.unpacker = unpacker.UnpackerService()
         self.assembler = assembler.AssemblerService()
+        if not files is None:
+            for f in files:
+                self.add_file(f)
 
 
     def get_tpc_channel_map(self, ch_map_id) -> detchannelmaps.TPCChannelMap:
-        '''Get the channel map'''
+        """
+        Returns the channel map object associated to ch_map_id from the local cache.
+        If the object doesn't exist, a new one is created and added to the cache.
+
+        Args:
+            ch_map_id (str): TPC channel map identifier
+
+        Returns:
+            detchannelmaps.TPCChannelMap: The channel map object
+        """
         return self.tpc_chan_map_cache.setdefault(ch_map_id, detchannelmaps.make_map(ch_map_id))
             
 
@@ -87,9 +113,12 @@ class RecordReader():
         for i in r.tr_list:
             del self.record_list[r.run_number][i]
 
-    def add_product(self, product, unpacker, assembler):
+    def add_product(self, product, unpacker, assembler=None):
+        
         self.unpacker.add(product, unpacker)
-        self.assembler.add(product, product, assembler)
+
+        if assembler is not None:
+            self.assembler.add(product, product, assembler)
 
     def load_record(self, run, tr):
         '''Load a trigger record from a specific run'''
@@ -102,24 +131,6 @@ class RecordReader():
 
         r = self.record_list[run][tr]
 
-        # # TODO: make configurable
-        # upk = unpacker.UnpackerService()
-        # asm = assembler.AssemblerService()
-
-        # # Unpackers
-        # upk.add_unpacker('bde_eth', unpacker.WIBEthFragmentPandasUnpacker())
-        # upk.add_unpacker('tp', unpacker.TPFragmentPandasUnpacker())
-
-        # # Assemblers
-        # weth_asb = assembler.ADCJoiner('bde_eth')
-        # tp_asb = assembler.TPConcatenator('tp')
-        
-        # asm.add('bde_eth', weth_asb)
-        # asm.add('tp', tp_asb)
-
-
-        # Open the rawdata file
-        # A little inefficient? Maybe keep a cache?
         print(f"Opening {r.path}")
         rdf = hdf5libs.HDF5RawDataFile(r.path)
 

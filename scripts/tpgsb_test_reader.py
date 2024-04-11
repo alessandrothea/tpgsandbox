@@ -12,17 +12,30 @@ import tpgsandbox.utils.reader as recordreader
 
 from rich import print
 from rich.logging import RichHandler
-# import detchannelmaps
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('rawfile', type=click.Path(exists=True))
-@click.option('-i', '--interactive', is_flag=True, default=False)
-@click.option('-p', '--plot', type=str, default=None)
-@click.option('-o', '--tr-offset', type=int, default=0)
-@click.option('-n', '--num-trs', type=int, default=1)
-def main(rawfile, interactive, plot, tr_offset, num_trs):
+@click.option('-i', '--interactive', is_flag=True, default=False, help="Start IPython")
+@click.option('-p', '--plot', type=str, default=None, help="Generate example ADC plots")
+@click.option('-o', '--tr-offset', type=int, default=0, help="Offset of the first Trigger Record to process")
+@click.option('-n', '--num-trs', type=int, default=1, help="Number of trigger records to process")
+def cli(rawfile, interactive, plot, tr_offset, num_trs):
+    """
+    This is an example script to demonstrate the usage of the Record Reader utility to 
+    demonstrate how to unpack, pre-process DUNE raw data for a selection of fragments
+
+
+    \b
+    rawfile : Path of the original raw data file
+
+    The script demonstrates how to 
+    - Create a record reader object 
+    - Define unpacking porducts and how to pre-process (assemble)
+    - Plot raw adc channels vs time maps as PDG files
+    - Optionally: start an IPython shell to interactlvely play with the unpacket dataframes
+    """
 
     rr = recordreader.RecordReader()
     rr.add_file(rawfile)
@@ -38,10 +51,6 @@ def main(rawfile, interactive, plot, tr_offset, num_trs):
     for run,tr in trs:
         print(f"--- Reading Trigger Record {run}:{tr} ---")
 
-        # unpacked_tr = up.unpack(rdf, tr)
-
-        # dfs = asm_svc.assemble(unpacked_tr)
-
         data = rr.load_record(run,tr)
         
         df_tp = data.record['tp']
@@ -50,22 +59,6 @@ def main(rawfile, interactive, plot, tr_offset, num_trs):
 
         if plot and not df_tpc.empty:
             import matplotlib.pyplot as plt
-
-            # with PdfPages('multipage_pdf.pdf') as pdf:
-
-            print("Plotting the first 128 samples")
-            # xticks = df_tpc.columns[::len(df_tpc.columns)//10]
-            xpos = list(range(len(df_tpc.columns)))[::len(df_tpc.columns)//10]
-
-            fig, ax = plt.subplots(figsize=(10,8))
-            pcm = ax.pcolormesh(df_tpc.iloc[:128])
-            fig.colorbar(pcm)
-            ax.set_xticks(xpos, [df_tpc.columns[i] for i in xpos])
-            ax.set_xlabel("channel id")
-            ax.set_ylabel("Samples (since start of RO window)")
-            # pdf.savefig()
-            fig.savefig(f'wibeth_frame_{tr}_{plot}_0-127ticks.png')
-            # fig.savefig('wibeth_frame_0-127ticks.pdf')
 
             print("Plotting all samples")
 
@@ -94,20 +87,6 @@ def main(rawfile, interactive, plot, tr_offset, num_trs):
             print("Plotting done")
 
 
-
-            # # Assigning labels of x-axis 
-            # # according to dataframe
-            # # plt.xticks(range(len(df_tpc.columns)), df_tpc.columns)
-            
-            # # Assigning labels of y-axis 
-            # # according to dataframe
-            # # plt.yticks(range(len(df_tpc)), df_tpc.index)
-            # plt.colorbar()
-            # plt.savefig('wibeth_frame.png')
-
-
-
-
     if interactive:
         import IPython
         IPython.embed(colors='neutral')
@@ -122,4 +101,4 @@ if __name__ == "__main__":
         handlers=[RichHandler()]
 	)
 
-	main()
+	cli()

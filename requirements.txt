@@ -1,0 +1,7 @@
+pandas
+matplotlib
+plotly
+kaleido
+ipywidgets
+jupyter
+ipython
