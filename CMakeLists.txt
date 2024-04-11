@@ -11,14 +11,28 @@ cmake_minimum_required(VERSION 3.12)
 project(tpgsandbox VERSION 0.0.0)
 
 find_package(daq-cmake REQUIRED)
+find_package(fdreadoutlibs REQUIRED)
+find_package(trgdataformats REQUIRED)
 
 daq_setup_environment()
-
 
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 ##############################################################################
+# Extra options and tweaks
+set(TPGTOOLS_USE_INTRINSICS ON)
 
+if(${TPGTOOLS_USE_INTRINSICS})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+endif()
+
+##############################################################################
+# Main library
+daq_add_library( *.cpp LINK_LIBRARIES fdreadoutlibs::fdreadoutlibs trgdataformats::trgdataformats )
+
+
+# python bindings
+daq_add_python_bindings(*.cpp LINK_LIBRARIES ${PROJECT_NAME} ) # Any additional libraries to link in beyond the main library not yet determined
 
 
 ##############################################################################
