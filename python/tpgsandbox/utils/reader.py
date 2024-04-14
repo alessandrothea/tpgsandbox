@@ -44,8 +44,8 @@ class RecordReader():
     For each file the list of run and trigger records pair is extracted from the file and cached.
     The operational environment for each file is stored as well for later use.
 
-    The fragment unpacking and assembli into Dataframes is configured by adding "products".
-    For each product a  
+    The fragment unpacking and assemble into Dataframes is configured by adding "products".
+    
     
     """
 

@@ -105,6 +105,7 @@ protected:
 };
 
 
+
 class AVXTPGEmulator : public TPGEmulator
 {
 

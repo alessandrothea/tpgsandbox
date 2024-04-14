@@ -14,7 +14,6 @@ import rawdatautils.unpack.wibeth as wibeth_unpack
 import rawdatautils.unpack.triggerprimitive as tp_unpack
 
 from rich import print
-
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -460,6 +459,7 @@ class UnpackerService:
         """
 
         res = {}
+        print('SSSS')
 
         # Recover the tpc_chan_map_id from the operational environment from file if not specified
         if tpc_chan_map_id is None:
@@ -467,6 +467,7 @@ class UnpackerService:
             tpc_chan_map_id = self._openv_2_chmap.get(op_env, None)
 
         ctx = UnpakerContext()
+        ctx.tpc_chan_map_id = tpc_chan_map_id
         ctx.tpc_chan_map = self._get_tpc_channel_map(tpc_chan_map_id)
 
         

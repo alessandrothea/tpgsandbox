@@ -11,8 +11,13 @@ cmake_minimum_required(VERSION 3.12)
 project(tpgsandbox VERSION 0.0.0)
 
 find_package(daq-cmake REQUIRED)
+find_package(CLI11 REQUIRED)
+find_package(fmt REQUIRED)
+find_package(nlohmann_json REQUIRED)
+
+find_package(hdf5libs REQUIRED)
+find_package(detchannelmaps REQUIRED)
 find_package(fdreadoutlibs REQUIRED)
-find_package(trgdataformats REQUIRED)
 
 daq_setup_environment()
 
@@ -28,11 +33,14 @@ endif()
 
 ##############################################################################
 # Main library
-daq_add_library( *.cpp LINK_LIBRARIES fdreadoutlibs::fdreadoutlibs trgdataformats::trgdataformats )
+daq_add_library( *.cpp LINK_LIBRARIES hdf5libs::hdf5libs fmt::fmt fdreadoutlibs::fdreadoutlibs)
 
 
 # python bindings
-daq_add_python_bindings(*.cpp LINK_LIBRARIES ${PROJECT_NAME} ) # Any additional libraries to link in beyond the main library not yet determined
+# daq_add_python_bindings(*.cpp LINK_LIBRARIES ${PROJECT_NAME} ) # Any additional libraries to link in beyond the main library not yet determined
+
+
+daq_add_application(tpgsbx_emulate_tpg emulate_tpg.cxx LINK_LIBRARIES ${PROJECT_NAME} CLI11::CLI11 fmt::fmt) # Any libraries to link in not yet determined
 
 
 ##############################################################################

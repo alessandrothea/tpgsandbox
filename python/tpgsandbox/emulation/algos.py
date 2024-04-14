@@ -1,7 +1,7 @@
-from numba import jit,njit
+from numba import njit
 import numpy as np
 import pandas as pd
-from typing import Literal, get_args
+from typing import Literal
 from sklearn.cluster import DBSCAN
 
 @njit
@@ -56,7 +56,16 @@ from numba.types import List,Tuple,int64,uint16,int16,int32
 
 @njit('Tuple((int64,uint64[:],uint64[:],uint16[:],uint16[:],uint32[:]))(int64[:],int16[:],int64)')
 def find_hits(ts: np.array, adcs: np.array, threshold=100):
-    
+    """Find his on a waveform by applying a threshold
+
+    Args:
+        ts (np.array): numpy array containing the timestamps at which the data is sampled
+        adcs (np.array): _description_
+        threshold (int, optional): _description_. Defaults to 100.
+
+    Returns:
+        _type_: _description_
+    """
     npts = len(adcs)//2
 
     num_hits = 0 # store number of found hits
@@ -178,6 +187,19 @@ def generate_tps(df_adc: pd.DataFrame, threshold: int, chmap):
 
 
 def dbscan_cluster(df_tps, eps=40, min_samples=5):
+    """
+    Cluster trigger primitives using the dbscan algorithm
+
+    The `dbscan_cluster` 
+
+    Args:
+        df_tps (_type_): _description_
+        eps (int, optional): _description_. Defaults to 40.
+        min_samples (int, optional): _description_. Defaults to 5.
+
+    Returns:
+        _type_: _description_
+    """
     points = df_tps[['time_peak','channel']].copy()
     points['time_peak'] = points['time_peak']/32
     clustering =  DBSCAN(eps=eps, min_samples=min_samples).fit(points.to_numpy())
